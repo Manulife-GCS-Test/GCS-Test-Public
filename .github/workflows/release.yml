@@ -1,0 +1,32 @@
+#from https://github.com/danielpacak/dev-sec-ops-seed/blob/master/.github/workflows/release.yml
+name: release
+on:
+  push:
+    tags:
+      - "v*"
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Setup Go
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.13
+      - name: Checkout code
+        uses: actions/checkout@v1
+      - name: Run unit tests
+        run: make test
+      - name: Loging to GitHub Package Registry
+        run: |
+          docker login -u ${{ secrets.GITHUB_REGISTRY_USER }} -p ${{ secrets.GITHUB_REGISTRY_TOKEN }} docker.pkg.github.com
+      - name: Release
+        uses: goreleaser/goreleaser-action@v1
+        with:
+          args: release --rm-dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_REGISTRY_TOKEN }}
+      - name: Scan image for vulnerabilities
+        uses: docker://docker.io/aquasec/trivy:0.2.1
+        with:
+          args: --cache-dir /var/lib/trivy docker.pkg.github.com/danielpacak/dev-sec-ops-seed/seed:${{ github.ref }}
