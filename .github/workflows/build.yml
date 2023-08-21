@@ -1,0 +1,30 @@
+#from https://github.com/danielpacak/dev-sec-ops-seed/blob/master/.github/workflows/build.yml
+name: build
+on: #[push, pull_request]
+  workflow_dispatch:
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Setup Go
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.13
+      - name: Checkout code
+        uses: actions/checkout@v1
+      - name: Run unit tests
+        run: make test
+      - name: Upload code coverage
+        uses: codecov/codecov-action@v1.0.2
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage.txt
+      - name: Release snapshot
+        uses: goreleaser/goreleaser-action@v1
+        with:
+          args: release --snapshot --skip-publish --rm-dist
+      - name: Scan image for vulnerabilities
+        uses: docker://docker.io/aquasec/trivy:0.2.1
+        with:
+          args: --cache-dir /var/lib/trivy --exit-code 1 --no-progress docker.pkg.github.com/danielpacak/dev-sec-ops-seed/seed:${{ github.sha }}
