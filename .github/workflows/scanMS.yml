@@ -27,8 +27,6 @@ jobs:
       id: msdo
       with:
         tools: 'trivy'
-      inputs:
-          break: true
 
     # Upload alerts to the Security tab
     - name: Upload alerts to Security tab
