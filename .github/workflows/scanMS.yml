@@ -23,7 +23,13 @@ jobs:
       uses: microsoft/security-devops-action@preview
       env:
         TRIVY_ACTION: 'image'
-        TRIVY_TARGET: 'cusregistery.azurecr.io/hello-world:latest'
+        TRIVY_TARGET: 'hello-me:latest'
       id: msdo
       with:
         tools: 'trivy'
+
+    # Upload alerts to the Security tab
+    - name: Upload alerts to Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: ${{ steps.msdo.outputs.sarifFile }}
