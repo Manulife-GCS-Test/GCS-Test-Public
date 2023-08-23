@@ -1,0 +1,29 @@
+name: MicrosoftDevOpsSecurityContainers
+on:
+  workflow_dispatch:
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: |
+          5.0.x
+          6.0.x
+
+    - name: Build & Tag Image
+      run: |
+        docker build . --tag hello-me:latest
+
+    # Run trivy
+    - name: Run Microsoft DevOps Security
+      uses: microsoft/security-devops-action@preview
+      env:
+        TRIVY_ACTION: 'image'
+        TRIVY_TARGET: 'cusregistery.azurecr.io/hello-world:latest'
+      id: msdo
+      with:
+        tools: 'trivy'
